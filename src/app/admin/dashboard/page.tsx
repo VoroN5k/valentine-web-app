@@ -10,7 +10,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         const check = async () => {
-            const { data } = await supabase.auth.getUser();
+            const { data } = await supabase().auth.getUser();
 
             if(!data.user){
                 router.push("/admin");
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     }, [router]);
 
     const logout = async () => {
-        await supabase.auth.signOut();
+        await supabase().auth.signOut();
         router.push("/admin");
     };
 
