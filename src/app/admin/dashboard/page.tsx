@@ -36,7 +36,7 @@ export default function AdminDashboard() {
                 <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                 <button
                     onClick={logout}
-                    className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition"
+                    className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer"
                 >
                     Вийти
                 </button>
