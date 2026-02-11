@@ -38,6 +38,7 @@ export default function YesAnimation() {
                                     fill
                                     className="object-cover"
                                     priority
+                                    unoptimized={false}
                                 />
                             </div>
 
