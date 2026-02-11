@@ -1,49 +1,111 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+    const [files, setFiles] = useState<{ id: string; url: string; name: string }[]>([]);
+    const [uploading, setUploading] = useState(false);
+    const dropRef = useRef<HTMLDivElement | null>(null);
     const router = useRouter();
-    const [checking, setChecking] = useState(true);
 
+    // Перевірка авторизації
     useEffect(() => {
-        const check = async () => {
-            const { data } = await supabase().auth.getUser();
+        supabase().auth.getSession().then(({ data: { session } }) => {
+            if (!session) router.push("/admin");
+        });
+        fetchPhotos();
+    }, []);
 
-            if(!data.user){
-                router.push("/admin");
-                return;
-            }
-
-            setChecking(false);
-        };
-
-        check();
-    }, [router]);
-
-    const logout = async () => {
-        await supabase().auth.signOut();
-        router.push("/admin");
+    // Завантажуємо фото з таблиці
+    const fetchPhotos = async () => {
+        const { data, error } = await supabase().from("photos").select("*").order("created_at", { ascending: false });
+        if (error) {
+            console.error(error);
+            return;
+        }
+        setFiles(data as any);
     };
 
-    if (checking) return <p className="text-white mt-10">Перевіряю доступ...</p>;
+    // Обробка файлів
+    const handleFiles = async (files: FileList) => {
+        setUploading(true);
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            // Завантаження в Storage
+            const { data: storageData, error: storageError } = await supabase().storage
+                .from("photos")
+                .upload(`public/${file.name}`, file, { upsert: true });
+
+            if (storageError) {
+                console.error(storageError);
+                continue;
+            }
+
+            // Отримання публічного URL
+            const { data: urlData } = supabase().storage.from("photos").getPublicUrl(`public/${file.name}`);
+
+            // Додавання у таблицю
+            await supabase().from("photos").insert([{ url: urlData.publicUrl, name: file.name }]);
+        }
+
+        setUploading(false);
+        fetchPhotos();
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+    };
+
+    const handleDelete = async (id: string, url: string) => {
+        const path = url.split("/storage/v1/object/public/photos/")[1];
+        await supabase().storage.from("photos").remove([`public/${path}`]);
+        await supabase().from("photos").delete().eq("id", id);
+        fetchPhotos();
+    };
 
     return (
-        <div className="w-full max-w-4xl mt-10 mx-auto p-8 rounded-3xl bg-white/10 border border-white/15 shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                <button
-                    onClick={logout}
-                    className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer"
-                >
-                    Вийти
-                </button>
+        <div className="p-8">
+            <h1 className="text-2xl font-bold mb-4">Адмін панель</h1>
+
+            {/* Drag & Drop зона */}
+            <div
+                ref={dropRef}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                className="mb-6 border-2 border-dashed border-pink-400 rounded-lg p-8 text-center text-gray-500 hover:border-pink-500 transition cursor-pointer"
+            >
+                {uploading ? "Завантаження..." : "Перетягніть сюди файли або клікніть для вибору"}
+                <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                />
             </div>
 
-            <p className="text-white/70">Тут буде адмінка для завантаження фото та додавання текстів 💖</p>
+            {/* Галерея фото */}
+            <div className="grid grid-cols-3 gap-4">
+                {files.map((f) => (
+                    <div key={f.id} className="relative">
+                        <img src={f.url} alt={f.name} className="w-full h-48 object-cover rounded shadow" />
+                        <button
+                            onClick={() => handleDelete(f.id, f.url)}
+                            className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded"
+                        >
+                            Видалити
+                        </button>
+                    </div>
+                ))}
+            </div>
         </div>
     );
-
 }

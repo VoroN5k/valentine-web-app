@@ -2,96 +2,57 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 
 export default function AdminLoginForm() {
-    const router = useRouter();
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
 
-    const onLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleLogin = async () => {
         setLoading(true);
-        setError(null);
-        setSuccess(null);
-
-        // Перевірка на пусті поля
-        if (!email || !password) {
-            setError("Будь ласка, заповніть усі поля!");
-            setLoading(false);
-            return;
-        }
-
-        const { error } = await supabase().auth.signInWithPassword({
-            email,
-            password,
-        });
-
+        const { error } = await supabase().auth.signInWithPassword({ email, password });
         setLoading(false);
 
         if (error) {
-            // Покращене повідомлення помилки
-            if (error.message.includes("Invalid login credentials")) {
-                setError("Неправильний email або пароль ❌");
-            } else if (error.message.includes("User not found")) {
-                setError("Користувача не знайдено 😕");
-            } else {
-                setError(error.message);
-            }
-            return;
+            setError(error.message);
+        } else {
+            setError("");
+            window.location.href = "/admin/dashboard";
         }
-
-        // Успішний логін
-        setSuccess("Вхід успішний! ❤️ Перенаправляю...");
-        setTimeout(() => router.push("/admin/dashboard"), 800);
     };
 
     return (
-        <form
-            onSubmit={onLogin}
-            className="w-full max-w-md rounded-3xl border border-white/15 bg-white/10 backdrop-blur-xl shadow-2xl p-8"
-        >
-            <h1 className="text-3xl font-bold mb-4 text-pink-400">Адмінка 🔐</h1>
+        <div className="relative w-full h-screen bg-white">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-pink-50/50 backdrop-blur-sm p-10 rounded-[3rem] shadow-2xl w-full max-w-sm flex flex-col items-center">
+                <h1 className="text-3xl font-extrabold text-pink-500 text-center mb-8"> Адмін панель 💖</h1>
 
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full mb-4 px-4 py-3 rounded-2xl bg-black/30 border border-white/15 outline-none focus:border-pink-400 transition"
-            />
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full mb-4 px-5 py-3 border border-pink-200 rounded-[2rem] focus:outline-none focus:ring-2 focus:ring-pink-300 shadow-inner"
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full mb-6 px-5 py-3 border border-pink-200 rounded-[2rem] focus:outline-none focus:ring-2 focus:ring-pink-300 shadow-inner"
+                />
 
-            <input
-                type="password"
-                placeholder="Пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full mb-4 px-4 py-3 rounded-2xl bg-black/30 border border-white/15 outline-none focus:border-pink-400 transition"
-            />
+                <button
+                    onClick={handleLogin}
+                    disabled={loading}
+                    className="w-full py-3 bg-pink-400 text-white font-bold rounded-[2rem] hover:bg-pink-300 transition-all shadow-md flex justify-center items-center cursor-pointer"
+                >
+                    {loading ? "Завантаження..." : "Увійти"}
+                </button>
 
-            {error && (
-                <p className="text-red-300 mb-2 text-sm bg-red-500/10 px-3 py-2 rounded">
-                    {error}
-                </p>
-            )}
+                {error && <p className="text-red-500 mt-4 text-center font-medium">{error}</p>}
+            </div>
+        </div>
 
-            {success && (
-                <p className="text-green-300 mb-2 text-sm bg-green-500/10 px-3 py-2 rounded">
-                    {success}
-                </p>
-            )}
-
-            <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-6 py-3 rounded-2xl bg-pink-500 hover:bg-pink-400 disabled:opacity-60 transition font-semibold shadow-lg cursor-pointer"
-            >
-                {loading ? "Вхід..." : "Увійти"}
-            </button>
-        </form>
     );
 }
