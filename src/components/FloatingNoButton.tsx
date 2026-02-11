@@ -1,73 +1,56 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-
-function clamp(n: number, min: number, max: number){
-    return Math.max(min, Math.min(max, n));
-}
-
+import { useRef, useState, useEffect } from "react";
 
 export default function FloatingNoButton() {
     const btnRef = useRef<HTMLButtonElement | null>(null);
-
-    const [pos, setPos] = useState<{ x: number, y: number } | null> (null);
-    const [mounted, setMounted] = useState(false);
-
+    const [pos, setPos] = useState({ x: 0, y: 0 });
     const padding = 16;
 
+    // стартова позиція праворуч від кнопки "Так"
     useEffect(() => {
-        setMounted(true);
+        const btn = btnRef.current;
+        const yesButton = document.getElementById("yes-button");
+        if (!btn || !yesButton) return;
 
-        setPos({x: 0,y: 0});
+        const yesRect = yesButton.getBoundingClientRect();
+
+        // ставимо кнопку трохи правіше і по центру висоти кнопки "Так"
+        setPos({
+            x: yesRect.right + 16, // 16px відступ праворуч
+            y: yesRect.top + yesRect.height / 2 - btn.offsetHeight / 2,
+        });
     }, []);
 
-    const moveRandom = () => {
+    // рух кнопки по всьому екрану при наведенні
+    const moveButton = () => {
         const btn = btnRef.current;
-        if(!btn) return;
-
-        const rect = btn.getBoundingClientRect();
+        if (!btn) return;
 
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        const maxY = vw - rect.width - padding;
-        const maxX = vh - rect.height - padding;
+        const maxX = vw - btn.offsetWidth - padding;
+        const maxY = vh - btn.offsetHeight - padding;
 
-        let x = Math.floor(Math.random() * maxX);
-        let y = Math.floor(Math.random() * maxY);
+        const x = Math.random() * maxX;
+        const y = Math.random() * maxY;
 
-        x = clamp(x, padding, maxX);
-        y = clamp(y, padding, maxY);
-
-        setPos({x, y});
-
-    }
-
-    if (!mounted || !pos) {
-        return (
-            <button
-                ref={btnRef}
-                type="button"
-                className="px-7 py-3 rounded-2xl bg-white/10 hover:bg-white/15 transition font-semibold border border-white/15"
-            >
-                Ні 😅
-            </button>
-        );
-    }
+        setPos({ x, y });
+    };
 
     return (
         <button
             ref={btnRef}
-            type="button"
-            onMouseEnter={moveRandom}
-            onClick={moveRandom}
+            onMouseEnter={moveButton}
             style={{
                 position: "fixed",
                 left: pos.x,
                 top: pos.y,
+                transition: "left 0.4s ease, top 0.4s ease", // плавний рух
                 zIndex: 50,
             }}
-            className="px-7 py-3 rounded-2xl bg-white/10 hover:bg-white/15 transition font-semibold border border-white/15 shadow-lg"
+            className="px-7 py-3 rounded-2xl bg-pink-500 text-white font-semibold shadow-lg border border-pink-600 cursor-pointer"
         >
             Ні 😅
         </button>

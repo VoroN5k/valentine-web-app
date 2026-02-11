@@ -25,7 +25,7 @@ export default function YesAnimation() {
                             <h2 className="mt-6 text-3xl font-extrabold">
                                 урааааааа 😭❤️
                             </h2>
-                            <p className="mt-2 text-white/80">
+                            <p className="mt-2 text-black/80">
                                 я щас розплавлюсь від щастя…
                             </p>
                         </>
@@ -45,7 +45,7 @@ export default function YesAnimation() {
                                 тепер ти офіційно моя валентинка 💘
                             </h2>
 
-                            <p className="mt-2 text-white/80">
+                            <p className="mt-2 text-black/80">
                                 (і я тебе більше не відпущу 😼)
                             </p>
 

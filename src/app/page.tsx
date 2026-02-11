@@ -2,8 +2,8 @@ import ValentineCard from "@/components/ValentineCard";
 
 export default function HomePage() {
     return (
-        <main className="min-h-screen flex items-center justify-center px-4 py-10">
+        <div className="w-screen h-screen relative bg-white flex items-center justify-center overflow-hidden">
             <ValentineCard />
-        </main>
+        </div>
     );
 }

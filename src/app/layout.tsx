@@ -7,6 +7,7 @@ export const metadata: Metadata = {
     description: "Наш сайт для валентинки 💖",
 };
 
+
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="uk">
