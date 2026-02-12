@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase/server";
+import { CreateClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
     try {
@@ -9,8 +9,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No photos selected" }, { status: 400 });
         }
 
+        const supabase = await CreateClient();
+
         // Отримуємо URL фото для видалення зі Storage
-        const { data: photos, error } = await supabaseServer
+        const { data: photos, error } = await supabase
             .from("photos")
             .select("id, url")
             .in("id", photoIds);
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
         for (const photo of photos!) {
             const path = photo.url.split("/storage/v1/object/public/photos/")[1];
             if (path) {
-                const { error: storageError } = await supabaseServer.storage
+                const { error: storageError } = await supabase.storage
                     .from("photos")
                     .remove([path]);
                 if (storageError) console.error("Storage delete error:", storageError);
@@ -29,7 +31,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Видаляємо рядки з таблиці
-        const { error: delError } = await supabaseServer
+        const { error: delError } = await supabase
             .from("photos")
             .delete()
             .in("id", photoIds);
