@@ -1,22 +1,36 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
 export default function Navbar() {
     const router = useRouter();
+    const [isAuthed, setIsAuthed] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const checkSession = async () => {
+            const { data: { session } } = await supabase().auth.getSession();
+            setIsAuthed(!!session);
+            setLoading(false);
+        };
+
+        checkSession();
+
+        const { data: listener } = supabase().auth.onAuthStateChange((_event, session) => {
+            setIsAuthed(!!session);
+        });
+
+        return () => {
+            listener.subscription.unsubscribe();
+        };
+    }, []);
 
     const handleAdminClick = async () => {
-        const {
-            data: { session },
-        } = await supabase().auth.getSession();
-
-        if (session) {
-            router.push("/admin/dashboard");
-        } else {
-            router.push("/admin");
-        }
+        const { data: { session } } = await supabase().auth.getSession();
+        router.push(session ? "/admin/dashboard" : "/admin");
     };
 
     return (
@@ -31,9 +45,12 @@ export default function Navbar() {
                         Головна
                     </Link>
 
-                    <Link href="/album" className="hover:text-pink-500 transition">
-                        Альбом
-                    </Link>
+                    {/* Альбом показуємо тільки якщо авторизований */}
+                    {!loading && isAuthed && (
+                        <Link href="/album" className="hover:text-pink-500 transition">
+                            Альбом
+                        </Link>
+                    )}
 
                     <Link href="/moments" className="hover:text-pink-500 transition">
                         Moments
