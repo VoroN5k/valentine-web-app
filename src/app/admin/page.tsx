@@ -1,12 +1,11 @@
 "use client";
 
-import PhotoUploader from "@/components/PhotoUploader";
+import AdminLoginForm from "@/components/AdminLoginForm";
 
-export default function AdminDashboardPage() {
+export default function AdminPage() {
     return (
-        <div className="flex flex-col items-center justify-start min-h-[calc(100vh-64px)]">
-            <h1 className="text-2xl font-bold text-pink-500 mb-6">Адмінка: Завантаження фото</h1>
-            <PhotoUploader />
+        <div className="flex flex-col items-center justify-center min-h-screen bg-pink-50">
+            <AdminLoginForm />
         </div>
     );
 }

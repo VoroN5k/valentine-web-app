@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import LogOutButton from "@/components/LogOutButton";
+import PhotoUploader from "@/components/PhotoUploader";
+import PhotoUploadModal from "@/components/PhotoUploadModal";
 
 export default function AdminDashboard() {
     const [files, setFiles] = useState<{ id: string; url: string; name: string }[]>([]);
     const [uploading, setUploading] = useState(false);
-    const dropRef = useRef<HTMLDivElement | null>(null);
+
+    const [modalFile, setModalFile] = useState<File | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+
     const router = useRouter();
 
     // Перевірка авторизації
@@ -18,96 +24,89 @@ export default function AdminDashboard() {
         fetchPhotos();
     }, []);
 
-    // Завантажуємо фото з таблиці
     const fetchPhotos = async () => {
-        const { data, error } = await supabase().from("photos").select("*").order("created_at", { ascending: false });
-        if (error) {
-            console.error(error);
-            return;
-        }
+        const { data, error } = await supabase()
+            .from("photos")
+            .select("*")
+            .order("created_at", { ascending: false });
+        if (error) return console.error(error);
         setFiles(data as any);
     };
 
-    // Обробка файлів
-    const handleFiles = async (files: FileList) => {
-        setUploading(true);
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            console.log("Step 1: got file", file.name);
-
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const res = await fetch("/api/upload", {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await res.json();
-
-            if (data.error) {
-                console.error("Upload error:", data.error);
-            }
-
-            console.log("Step 2: got response, public url + inserted: ", data, data.url);
-        }
-
-
-        setUploading(false);
-        fetchPhotos();
-    }
-
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+    // Викликаємо модал при виборі файлів
+    const handleFilesSelected = (files: FileList) => {
+        if (files.length === 0) return;
+        setModalFile(files[0]); // модал показуємо для першого файлу
+        setModalVisible(true);
     };
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
+    // Фактичний аплоад викликається з модала
+    const uploadFileWithCaption = async (file: File, caption: string) => {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("caption", caption);
+
+        try {
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.error) console.error("Upload error:", data.error);
+            fetchPhotos();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleDelete = async (id: string, url: string) => {
         const path = url.split("/storage/v1/object/public/photos/")[1];
-        await supabase().storage.from("photos").remove([`public/${path}`]);
+        await supabase().storage.from("photos").remove([path]);
         await supabase().from("photos").delete().eq("id", id);
         fetchPhotos();
     };
 
     return (
-        <div className="p-8">
-            <h1 className="text-2xl font-bold mb-4">Адмін панель</h1>
-
-            {/* Drag & Drop зона */}
-            <div
-                ref={dropRef}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                className="mb-6 border-2 border-dashed border-pink-400 rounded-lg p-8 text-center text-gray-500 hover:border-pink-500 transition cursor-pointer"
-            >
-                {uploading ? "Завантаження..." : "Перетягніть сюди файли або клікніть для вибору"}
-                <input
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => e.target.files && handleFiles(e.target.files)}
-                />
+        <div className="min-h-screen flex flex-col items-center p-6">
+            {/* Верхня панель з кнопкою Вийти */}
+            <div className="w-full flex justify-end mb-6">
+                <LogOutButton />
             </div>
 
+            <h1 className="text-2xl font-bold text-pink-500 mb-6">Адмін панель: Завантаження фото</h1>
+
+            {/* Drag & Drop зона */}
+            <PhotoUploader uploading={uploading} onFilesSelected={handleFilesSelected} />
+
             {/* Галерея фото */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-4xl mt-6">
                 {files.map((f) => (
-                    <div key={f.id} className="relative">
-                        <img src={f.url} alt={f.name} className="w-full h-48 object-cover rounded shadow" />
+                    <div
+                        key={f.id}
+                        className="relative rounded overflow-hidden shadow-lg hover:scale-105 transition-transform"
+                    >
+                        <img src={f.url} alt={f.name} className="w-full h-48 object-cover" />
                         <button
                             onClick={() => handleDelete(f.id, f.url)}
-                            className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded"
+                            className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full hover:bg-red-600 transition"
                         >
                             Видалити
                         </button>
                     </div>
                 ))}
             </div>
+
+            {/* Модал */}
+            {modalVisible && modalFile && (
+                <PhotoUploadModal
+                    file={modalFile}
+                    onClose={() => setModalVisible(false)}
+                    onUploaded={() => setModalVisible(false)}
+                />
+            )}
         </div>
     );
 }

@@ -23,7 +23,7 @@ export default function AdminLoginForm() {
     };
 
     return (
-        <div className="relative w-full h-screen bg-white">
+        <div className="">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-pink-50/50 backdrop-blur-sm p-10 rounded-[3rem] shadow-2xl w-full max-w-sm flex flex-col items-center">
                 <h1 className="text-3xl font-extrabold text-pink-500 text-center mb-8"> Адмін панель 💖</h1>
 
