@@ -1,9 +1,11 @@
-import { supabaseServer } from "@/lib/supabase/server";
+import { CreateClient } from "@/lib/supabase/server";
 import AlbumPhotos from "@/components/AlbumPhotos";
 
 export default async function AlbumPage() {
+
+    const supabase = await CreateClient();
     // Отримуємо фото з бази
-    const { data: photos, error } = await supabaseServer
+    const { data: photos, error } = await supabase
         .from("photos")
         .select("*")
         .order("created_at", { ascending: false });

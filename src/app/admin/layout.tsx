@@ -19,16 +19,10 @@ export default function AdminLayout({ children }: Props) {
             const { data: { session } } = await supabase().auth.getSession();
             setSession(session);
             setLoading(false);
-
-            // якщо користувач на dashboard і неавторизований → редірект
-            if (!session && window.location.pathname.startsWith("/admin/dashboard")) {
-                router.replace("/admin");
-            }
         };
 
         checkSession();
 
-        // слухаємо зміни сесії (логін/логаут)
         const { data: listener } = supabase().auth.onAuthStateChange((_event, session) => {
             setSession(session);
 

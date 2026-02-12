@@ -12,12 +12,7 @@ export default function LogOutButton() {
             const data = await res.json();
 
             if (data.success) {
-                // Це ключовий момент: викликаємо клієнтський logout Supabase
-                // Щоб видалити сесію
-                const { supabase } = await import("@/lib/supabase/client");
-                await supabase().auth.signOut();
-
-                window.location.href = "/admin"; // редірект на логін
+                window.location.href = "/admin";
             } else {
                 alert(data.error || "Помилка при виході");
             }

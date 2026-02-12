@@ -1,16 +1,17 @@
-
-import { supabaseServer } from "@/lib/supabase/server";
+import { CreateClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 export async function POST() {
     try {
+        const supabase = await CreateClient();
 
-        return new Response(
-            JSON.stringify({ success: true }),
-            { status: 200 }
-        );
+        // Це видалить сесію на сервері та очистить cookies
+        await supabase.auth.signOut();
+
+        return NextResponse.json({ success: true });
     } catch (err: any) {
-        return new Response(
-            JSON.stringify({ success: false, error: err.message }),
+        return NextResponse.json(
+            { success: false, error: err.message },
             { status: 500 }
         );
     }
