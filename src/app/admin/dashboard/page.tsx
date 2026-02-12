@@ -34,27 +34,29 @@ export default function AdminDashboard() {
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            console.log("Step 1: got file", file.name);
 
-            // Завантаження в Storage
-            const { data: storageData, error: storageError } = await supabase().storage
-                .from("photos")
-                .upload(`public/${file.name}`, file, { upsert: true });
+            const formData = new FormData();
+            formData.append("file", file);
 
-            if (storageError) {
-                console.error(storageError);
-                continue;
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                console.error("Upload error:", data.error);
             }
 
-            // Отримання публічного URL
-            const { data: urlData } = supabase().storage.from("photos").getPublicUrl(`public/${file.name}`);
-
-            // Додавання у таблицю
-            await supabase().from("photos").insert([{ url: urlData.publicUrl, name: file.name }]);
+            console.log("Step 2: got response, public url + inserted: ", data, data.url);
         }
+
 
         setUploading(false);
         fetchPhotos();
-    };
+    }
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
