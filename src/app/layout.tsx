@@ -4,8 +4,8 @@ import {Metadata} from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-    title: "Sasha Valentine",
-    description: "Наш сайт валентинки 💖",
+    title: "I love you",
+    description: "Your valentine",
 };
 
 export default function RootLayout({
