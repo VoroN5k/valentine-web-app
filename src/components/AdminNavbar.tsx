@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const links = [
     { name: "PhotoUploader", href: "/admin/dashboard" },
-    // Можеш додавати інші розділи тут
+
     { name: "Dashboard", href: "/admin/dashboard/main" },
 ];
 

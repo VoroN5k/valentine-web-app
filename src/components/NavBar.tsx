@@ -40,31 +40,40 @@ export default function Navbar() {
                     <Link href={"/"}>💖 Наш сайт</Link>
                 </div>
 
-                <div className="flex gap-6 text-gray-700 font-medium">
+                <div className="flex gap-6 text-gray-700 font-medium items-center">
                     <Link href="/" className="hover:text-pink-500 transition">
                         Головна
                     </Link>
 
-                    {/* Альбом показуємо тільки якщо авторизований */}
+                    {/* Подарунки бачать усі */}
+                    <Link href="/gifts" className="hover:text-pink-500 transition flex items-center gap-1">
+                        🎁 Подарунки
+                    </Link>
+
                     {!loading && isAuthed && (
-                        <Link href="/album" className="hover:text-pink-500 transition">
-                            Альбом
-                        </Link>
+                        <>
+                            <Link href="/album" className="hover:text-pink-500 transition">
+                                Альбом
+                            </Link>
+                            {/* Кнопка швидкого додавання подарунка тільки для залогінених */}
+                            <Link
+                                href="/gifts/add"
+                                className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm hover:bg-pink-200 transition"
+                            >
+                                + Бажання
+                            </Link>
+                        </>
                     )}
 
                     <Link href="/moments" className="hover:text-pink-500 transition">
                         Moments
                     </Link>
 
-                    <Link href="/gifts" className="text-pink-500 hover:text-pink-700 font-medium">
-                        🎁 Подарунки
-                    </Link>
-
                     <button
                         onClick={handleAdminClick}
-                        className="hover:text-pink-500 transition"
+                        className="hover:text-pink-500 transition font-semibold"
                     >
-                        Admin
+                        {isAuthed ? "Admin" : "Увійти"}
                     </button>
                 </div>
             </div>
