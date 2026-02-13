@@ -56,6 +56,10 @@ export default function Navbar() {
                         Moments
                     </Link>
 
+                    <Link href="/gifts" className="text-pink-500 hover:text-pink-700 font-medium">
+                        🎁 Подарунки
+                    </Link>
+
                     <button
                         onClick={handleAdminClick}
                         className="hover:text-pink-500 transition"
